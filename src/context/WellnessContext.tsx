@@ -16,6 +16,7 @@ interface WellnessContextType {
   isOnboarded: boolean;
   setIsOnboarded: (value: boolean) => void;
   trialDaysLeft: number;
+  currentDay: number;
   isSubscribed: boolean;
   setIsSubscribed: (value: boolean) => void;
 }
@@ -53,7 +54,9 @@ export function WellnessProvider({ children }: { children: ReactNode }) {
     return saved ? new Date(saved) : new Date();
   });
 
-  const trialDaysLeft = Math.max(0, 30 - Math.floor((Date.now() - trialStart.getTime()) / (1000 * 60 * 60 * 24)));
+  const daysSinceStart = Math.floor((Date.now() - trialStart.getTime()) / (1000 * 60 * 60 * 24));
+  const currentDay = Math.min(30, daysSinceStart + 1);
+  const trialDaysLeft = Math.max(0, 30 - daysSinceStart);
 
   const todayProgress: DailyProgress = {
     date: new Date().toISOString().split('T')[0],
@@ -140,6 +143,7 @@ export function WellnessProvider({ children }: { children: ReactNode }) {
       isOnboarded,
       setIsOnboarded,
       trialDaysLeft,
+      currentDay,
       isSubscribed,
       setIsSubscribed
     }}>
