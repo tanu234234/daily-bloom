@@ -12,6 +12,7 @@ export type UserGoal =
   | 'gain-weight'
   | 'low-energy'
   | 'motivation'
+  | 'lose-weight'
   | 'maintain'
   | 'lifestyle';
 
@@ -32,6 +33,7 @@ export interface RoutineItem {
   description: string;
   icon: string;
   completed?: boolean;
+  required?: boolean; // non-skippable tasks
 }
 
 export interface MealPlan {
@@ -44,6 +46,13 @@ export interface MealPlan {
 
 export interface Meal {
   time: string;
+  name: string;
+  items: string[];
+  alternatives?: MealAlternative[]; // Alternative dish options
+  calories?: number;
+}
+
+export interface MealAlternative {
   name: string;
   items: string[];
   calories?: number;
@@ -78,6 +87,13 @@ export interface WeeklyProgress {
   overallScore: number;
 }
 
+export interface CheatDay {
+  date: string;
+  reason?: string;
+}
+
+export const MAX_CHEAT_DAYS_PER_MONTH = 2;
+
 export const GOAL_INFO: Record<UserGoal, { label: string; description: string; icon: string }> = {
   'gain-weight': {
     label: 'Gain Weight',
@@ -93,6 +109,11 @@ export const GOAL_INFO: Record<UserGoal, { label: string; description: string; i
     label: 'Stay Motivated',
     description: 'Build discipline and overcome laziness with structured habits',
     icon: '🔥'
+  },
+  'lose-weight': {
+    label: 'Lose Weight',
+    description: 'Shed excess weight with healthy eating and exercise',
+    icon: '🏃'
   },
   'maintain': {
     label: 'Maintain Fitness',

@@ -1,0 +1,4 @@
+project_id = "ciossudbcwjnuvjifnfe"
+
+[functions.healbee-chat]
+verify_jwt = false
