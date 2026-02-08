@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { UserProfile, DailyRoutine, DailyProgress, UserGoal } from '@/types/wellness';
+import { UserProfile, DailyRoutine, DailyProgress, CheatDay, MAX_CHEAT_DAYS_PER_MONTH } from '@/types/wellness';
 import { generateRoutine } from '@/utils/routineGenerator';
 
 interface WellnessContextType {
@@ -19,6 +19,18 @@ interface WellnessContextType {
   currentDay: number;
   isSubscribed: boolean;
   setIsSubscribed: (value: boolean) => void;
+  // Cheat days
+  cheatDaysUsed: CheatDay[];
+  cheatDaysRemaining: number;
+  useCheatDay: (reason?: string) => boolean;
+  isCheatDayToday: boolean;
+  // Meal swapping
+  swappedMeals: Record<string, number>; // mealKey -> alternativeIndex
+  swapMeal: (mealKey: string, alternativeIndex: number) => void;
+  resetMealSwap: (mealKey: string) => void;
+  // Pending tasks for non-skippable logic
+  pendingRequiredTasks: string[];
+  canProceedToNext: (currentTaskId: string) => boolean;
 }
 
 const WellnessContext = createContext<WellnessContextType | undefined>(undefined);
@@ -37,11 +49,24 @@ export function WellnessProvider({ children }: { children: ReactNode }) {
   
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(() => {
     const saved = localStorage.getItem('completedTasks');
+    const today = new Date().toISOString().split('T')[0];
+    const savedDate = localStorage.getItem('completedTasksDate');
+    // Reset tasks if it's a new day
+    if (savedDate !== today) {
+      localStorage.setItem('completedTasksDate', today);
+      return new Set();
+    }
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
   const [waterGlasses, setWaterGlasses] = useState(() => {
     const saved = localStorage.getItem('waterGlasses');
+    const today = new Date().toISOString().split('T')[0];
+    const savedDate = localStorage.getItem('waterGlassesDate');
+    if (savedDate !== today) {
+      localStorage.setItem('waterGlassesDate', today);
+      return 0;
+    }
     return saved ? parseInt(saved) : 0;
   });
 
@@ -54,9 +79,39 @@ export function WellnessProvider({ children }: { children: ReactNode }) {
     return saved ? new Date(saved) : new Date();
   });
 
+  // Cheat days management
+  const [cheatDaysUsed, setCheatDaysUsed] = useState<CheatDay[]>(() => {
+    const saved = localStorage.getItem('cheatDaysUsed');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Meal swapping
+  const [swappedMeals, setSwappedMeals] = useState<Record<string, number>>(() => {
+    const saved = localStorage.getItem('swappedMeals');
+    const today = new Date().toISOString().split('T')[0];
+    const savedDate = localStorage.getItem('swappedMealsDate');
+    if (savedDate !== today) {
+      localStorage.setItem('swappedMealsDate', today);
+      return {};
+    }
+    return saved ? JSON.parse(saved) : {};
+  });
+
   const daysSinceStart = Math.floor((Date.now() - trialStart.getTime()) / (1000 * 60 * 60 * 24));
   const currentDay = Math.min(30, daysSinceStart + 1);
   const trialDaysLeft = Math.max(0, 30 - daysSinceStart);
+
+  // Calculate cheat days remaining for current month
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const cheatDaysThisMonth = cheatDaysUsed.filter(cd => {
+    const date = new Date(cd.date);
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  });
+  const cheatDaysRemaining = MAX_CHEAT_DAYS_PER_MONTH - cheatDaysThisMonth.length;
+
+  const today = new Date().toISOString().split('T')[0];
+  const isCheatDayToday = cheatDaysUsed.some(cd => cd.date === today);
 
   const todayProgress: DailyProgress = {
     date: new Date().toISOString().split('T')[0],
@@ -66,6 +121,57 @@ export function WellnessProvider({ children }: { children: ReactNode }) {
     waterGlasses,
     workoutDone: completedTasks.has('workout'),
     mealsFollowed: ['breakfast', 'lunch', 'dinner'].filter(m => completedTasks.has(m)).length
+  };
+
+  // Get pending required tasks (tasks that must be done before others)
+  const getPendingRequiredTasks = (): string[] => {
+    if (!dailyRoutine) return [];
+    
+    const allItems = [
+      ...dailyRoutine.morningHabits,
+      { id: 'breakfast', required: true },
+      { id: 'workout', required: true },
+      { id: 'lunch', required: true },
+      { id: 'dinner', required: true },
+      ...dailyRoutine.eveningHabits
+    ];
+
+    const pendingRequired: string[] = [];
+    for (const item of allItems) {
+      if (item.required && !completedTasks.has(item.id)) {
+        pendingRequired.push(item.id);
+      }
+    }
+    return pendingRequired;
+  };
+
+  const pendingRequiredTasks = getPendingRequiredTasks();
+
+  // Check if user can proceed to next task
+  const canProceedToNext = (currentTaskId: string): boolean => {
+    if (isCheatDayToday) return true; // Cheat day allows skipping
+    
+    if (!dailyRoutine) return true;
+    
+    const allItems = [
+      ...dailyRoutine.morningHabits,
+      { id: 'breakfast', required: true },
+      { id: 'workout', required: true },
+      { id: 'lunch', required: true },
+      { id: 'dinner', required: true },
+      ...dailyRoutine.eveningHabits
+    ];
+
+    const currentIndex = allItems.findIndex(item => item.id === currentTaskId);
+    
+    // Check if all previous required tasks are completed
+    for (let i = 0; i < currentIndex; i++) {
+      const item = allItems[i];
+      if (item.required && !completedTasks.has(item.id)) {
+        return false;
+      }
+    }
+    return true;
   };
 
   useEffect(() => {
@@ -87,10 +193,12 @@ export function WellnessProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     localStorage.setItem('completedTasks', JSON.stringify([...completedTasks]));
+    localStorage.setItem('completedTasksDate', new Date().toISOString().split('T')[0]);
   }, [completedTasks]);
 
   useEffect(() => {
     localStorage.setItem('waterGlasses', String(waterGlasses));
+    localStorage.setItem('waterGlassesDate', new Date().toISOString().split('T')[0]);
   }, [waterGlasses]);
 
   useEffect(() => {
@@ -98,6 +206,19 @@ export function WellnessProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('trialStart', new Date().toISOString());
     }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('cheatDaysUsed', JSON.stringify(cheatDaysUsed));
+  }, [cheatDaysUsed]);
+
+  useEffect(() => {
+    localStorage.setItem('swappedMeals', JSON.stringify(swappedMeals));
+    localStorage.setItem('swappedMealsDate', new Date().toISOString().split('T')[0]);
+  }, [swappedMeals]);
+
+  useEffect(() => {
+    localStorage.setItem('isSubscribed', String(isSubscribed));
+  }, [isSubscribed]);
 
   const setUserProfile = (profile: UserProfile) => {
     setUserProfileState(profile);
@@ -109,6 +230,11 @@ export function WellnessProvider({ children }: { children: ReactNode }) {
   };
 
   const toggleTask = (taskId: string) => {
+    // Check if previous required tasks are completed (unless it's a cheat day)
+    if (!isCheatDayToday && !canProceedToNext(taskId) && !completedTasks.has(taskId)) {
+      return; // Can't complete this task yet
+    }
+
     setCompletedTasks(prev => {
       const newSet = new Set(prev);
       if (newSet.has(taskId)) {
@@ -128,6 +254,33 @@ export function WellnessProvider({ children }: { children: ReactNode }) {
 
   const resetWater = () => setWaterGlasses(0);
 
+  const useCheatDay = (reason?: string): boolean => {
+    if (cheatDaysRemaining <= 0) return false;
+    if (isCheatDayToday) return false; // Already used today
+
+    const newCheatDay: CheatDay = {
+      date: today,
+      reason
+    };
+    setCheatDaysUsed(prev => [...prev, newCheatDay]);
+    return true;
+  };
+
+  const swapMeal = (mealKey: string, alternativeIndex: number) => {
+    setSwappedMeals(prev => ({
+      ...prev,
+      [mealKey]: alternativeIndex
+    }));
+  };
+
+  const resetMealSwap = (mealKey: string) => {
+    setSwappedMeals(prev => {
+      const newSwapped = { ...prev };
+      delete newSwapped[mealKey];
+      return newSwapped;
+    });
+  };
+
   return (
     <WellnessContext.Provider value={{
       userProfile,
@@ -145,7 +298,16 @@ export function WellnessProvider({ children }: { children: ReactNode }) {
       trialDaysLeft,
       currentDay,
       isSubscribed,
-      setIsSubscribed
+      setIsSubscribed,
+      cheatDaysUsed,
+      cheatDaysRemaining,
+      useCheatDay,
+      isCheatDayToday,
+      swappedMeals,
+      swapMeal,
+      resetMealSwap,
+      pendingRequiredTasks,
+      canProceedToNext
     }}>
       {children}
     </WellnessContext.Provider>

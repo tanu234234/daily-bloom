@@ -1,4 +1,4 @@
-import { UserProfile, DailyRoutine, UserGoal, RoutineItem, MealPlan, WorkoutPlan } from '@/types/wellness';
+import { UserProfile, DailyRoutine, UserGoal, RoutineItem, MealPlan, WorkoutPlan, MealAlternative, Meal } from '@/types/wellness';
 
 const ROUTINES_BY_GOAL: Record<UserGoal, {
   wakeUpTime: string;
@@ -28,6 +28,13 @@ const ROUTINES_BY_GOAL: Record<UserGoal, {
     morningDrink: 'Green tea with honey',
     workoutFocus: 'High-intensity interval training'
   },
+  'lose-weight': {
+    wakeUpTime: '6:00 AM',
+    bedTime: '10:00 PM',
+    waterIntake: 14,
+    morningDrink: 'Warm water with lemon and apple cider vinegar',
+    workoutFocus: 'Cardio & fat burning'
+  },
   'maintain': {
     wakeUpTime: '6:30 AM',
     bedTime: '10:30 PM',
@@ -44,166 +51,328 @@ const ROUTINES_BY_GOAL: Record<UserGoal, {
   }
 };
 
+function createMealWithAlternatives(
+  time: string,
+  name: string,
+  items: string[],
+  calories: number,
+  alternatives: MealAlternative[]
+): Meal {
+  return { time, name, items, calories, alternatives };
+}
+
 const MEAL_PLANS: Record<UserGoal, MealPlan> = {
   'gain-weight': {
-    breakfast: {
-      time: '8:00 AM',
-      name: 'Power Breakfast',
-      items: ['4 egg omelette with cheese', 'Whole grain toast with peanut butter', 'Banana smoothie', 'Handful of almonds'],
-      calories: 800
-    },
-    morningSnack: {
-      time: '10:30 AM',
-      name: 'Calorie Boost',
-      items: ['Greek yogurt with granola', 'Mixed nuts', 'Dried fruits'],
-      calories: 350
-    },
-    lunch: {
-      time: '1:00 PM',
-      name: 'Hearty Lunch',
-      items: ['Brown rice with dal', 'Grilled chicken/paneer', 'Mixed vegetables', 'Curd', 'Chapati'],
-      calories: 900
-    },
-    eveningSnack: {
-      time: '4:30 PM',
-      name: 'Protein Snack',
-      items: ['Protein shake', 'Peanut butter sandwich', 'Banana'],
-      calories: 400
-    },
-    dinner: {
-      time: '8:00 PM',
-      name: 'Muscle Recovery',
-      items: ['Whole wheat roti', 'Egg curry/Paneer', 'Brown rice', 'Mixed salad', 'Milk before bed'],
-      calories: 750
-    }
+    breakfast: createMealWithAlternatives(
+      '8:00 AM',
+      'Power Breakfast',
+      ['4 egg omelette with cheese', 'Whole grain toast with peanut butter', 'Banana smoothie', 'Handful of almonds'],
+      800,
+      [
+        { name: 'Protein Pancakes', items: ['Protein pancakes', 'Greek yogurt', 'Honey drizzle', 'Mixed berries'], calories: 750 },
+        { name: 'Avocado Toast Deluxe', items: ['Avocado toast with eggs', 'Smoked salmon', 'Orange juice'], calories: 780 }
+      ]
+    ),
+    morningSnack: createMealWithAlternatives(
+      '10:30 AM',
+      'Calorie Boost',
+      ['Greek yogurt with granola', 'Mixed nuts', 'Dried fruits'],
+      350,
+      [
+        { name: 'Protein Shake', items: ['Whey protein shake', 'Banana', 'Peanut butter'], calories: 400 },
+        { name: 'Trail Mix Bowl', items: ['Trail mix', 'Dark chocolate chips', 'Coconut flakes'], calories: 380 }
+      ]
+    ),
+    lunch: createMealWithAlternatives(
+      '1:00 PM',
+      'Hearty Lunch',
+      ['Brown rice with dal', 'Grilled chicken/paneer', 'Mixed vegetables', 'Curd', 'Chapati'],
+      900,
+      [
+        { name: 'Pasta Bowl', items: ['Whole wheat pasta', 'Creamy chicken alfredo', 'Garlic bread', 'Side salad'], calories: 950 },
+        { name: 'Rice & Curry', items: ['Biryani', 'Raita', 'Kebabs', 'Naan bread'], calories: 920 }
+      ]
+    ),
+    eveningSnack: createMealWithAlternatives(
+      '4:30 PM',
+      'Protein Snack',
+      ['Protein shake', 'Peanut butter sandwich', 'Banana'],
+      400,
+      [
+        { name: 'Smoothie Bowl', items: ['Acai smoothie bowl', 'Granola topping', 'Chia seeds'], calories: 420 },
+        { name: 'Cheese & Crackers', items: ['Cheese slices', 'Whole grain crackers', 'Apple slices'], calories: 380 }
+      ]
+    ),
+    dinner: createMealWithAlternatives(
+      '8:00 PM',
+      'Muscle Recovery',
+      ['Whole wheat roti', 'Egg curry/Paneer', 'Brown rice', 'Mixed salad', 'Milk before bed'],
+      750,
+      [
+        { name: 'Steak Dinner', items: ['Grilled steak', 'Mashed potatoes', 'Steamed broccoli', 'Gravy'], calories: 800 },
+        { name: 'Salmon Plate', items: ['Baked salmon', 'Quinoa', 'Asparagus', 'Lemon butter sauce'], calories: 720 }
+      ]
+    )
   },
   'low-energy': {
-    breakfast: {
-      time: '7:00 AM',
-      name: 'Energy Boost Breakfast',
-      items: ['Oatmeal with berries', 'Boiled eggs', 'Fresh orange juice', 'Green tea'],
-      calories: 500
-    },
-    morningSnack: {
-      time: '10:00 AM',
-      name: 'Vitality Snack',
-      items: ['Apple slices with almond butter', 'Green smoothie'],
-      calories: 250
-    },
-    lunch: {
-      time: '12:30 PM',
-      name: 'Balanced Lunch',
-      items: ['Quinoa salad', 'Grilled fish/tofu', 'Steamed vegetables', 'Lemon water'],
-      calories: 600
-    },
-    eveningSnack: {
-      time: '4:00 PM',
-      name: 'Afternoon Pick-me-up',
-      items: ['Trail mix', 'Coconut water', 'Dark chocolate (2 squares)'],
-      calories: 200
-    },
-    dinner: {
-      time: '7:30 PM',
-      name: 'Light Dinner',
-      items: ['Vegetable soup', 'Grilled chicken/paneer', 'Multigrain bread', 'Herbal tea'],
-      calories: 500
-    }
+    breakfast: createMealWithAlternatives(
+      '7:00 AM',
+      'Energy Boost Breakfast',
+      ['Oatmeal with berries', 'Boiled eggs', 'Fresh orange juice', 'Green tea'],
+      500,
+      [
+        { name: 'Smoothie Bowl', items: ['Açaí bowl', 'Banana', 'Granola', 'Honey drizzle'], calories: 480 },
+        { name: 'Avocado Toast', items: ['Avocado on sourdough', 'Poached egg', 'Cherry tomatoes'], calories: 520 }
+      ]
+    ),
+    morningSnack: createMealWithAlternatives(
+      '10:00 AM',
+      'Vitality Snack',
+      ['Apple slices with almond butter', 'Green smoothie'],
+      250,
+      [
+        { name: 'Energy Balls', items: ['Date energy balls', 'Herbal tea'], calories: 220 },
+        { name: 'Fruit & Nuts', items: ['Mixed berries', 'Walnuts', 'Coconut water'], calories: 240 }
+      ]
+    ),
+    lunch: createMealWithAlternatives(
+      '12:30 PM',
+      'Balanced Lunch',
+      ['Quinoa salad', 'Grilled fish/tofu', 'Steamed vegetables', 'Lemon water'],
+      600,
+      [
+        { name: 'Buddha Bowl', items: ['Brown rice', 'Chickpeas', 'Roasted veggies', 'Tahini dressing'], calories: 580 },
+        { name: 'Mediterranean Plate', items: ['Falafel wrap', 'Hummus', 'Greek salad'], calories: 620 }
+      ]
+    ),
+    eveningSnack: createMealWithAlternatives(
+      '4:00 PM',
+      'Afternoon Pick-me-up',
+      ['Trail mix', 'Coconut water', 'Dark chocolate (2 squares)'],
+      200,
+      [
+        { name: 'Yogurt Parfait', items: ['Greek yogurt', 'Honey', 'Almonds'], calories: 220 },
+        { name: 'Fruit Salad', items: ['Fresh fruit mix', 'Lime juice', 'Mint'], calories: 180 }
+      ]
+    ),
+    dinner: createMealWithAlternatives(
+      '7:30 PM',
+      'Light Dinner',
+      ['Vegetable soup', 'Grilled chicken/paneer', 'Multigrain bread', 'Herbal tea'],
+      500,
+      [
+        { name: 'Stir Fry', items: ['Vegetable stir fry', 'Tofu', 'Brown rice', 'Ginger tea'], calories: 480 },
+        { name: 'Soup & Salad', items: ['Minestrone soup', 'Caesar salad', 'Garlic bread'], calories: 520 }
+      ]
+    )
   },
   'motivation': {
-    breakfast: {
-      time: '6:30 AM',
-      name: 'Warrior Breakfast',
-      items: ['Protein pancakes', 'Scrambled eggs', 'Fresh fruits', 'Black coffee'],
-      calories: 550
-    },
-    morningSnack: {
-      time: '9:30 AM',
-      name: 'Focus Fuel',
-      items: ['Mixed nuts', 'Protein bar', 'Green tea'],
-      calories: 300
-    },
-    lunch: {
-      time: '12:00 PM',
-      name: 'Power Lunch',
-      items: ['Grilled chicken breast', 'Brown rice', 'Broccoli & spinach', 'Buttermilk'],
-      calories: 650
-    },
-    eveningSnack: {
-      time: '3:30 PM',
-      name: 'Pre-workout Snack',
-      items: ['Banana', 'Peanut butter', 'Coffee'],
-      calories: 250
-    },
-    dinner: {
-      time: '7:00 PM',
-      name: 'Recovery Dinner',
-      items: ['Salmon/Lentils', 'Sweet potato', 'Mixed greens', 'Chamomile tea'],
-      calories: 550
-    }
+    breakfast: createMealWithAlternatives(
+      '6:30 AM',
+      'Warrior Breakfast',
+      ['Protein pancakes', 'Scrambled eggs', 'Fresh fruits', 'Black coffee'],
+      550,
+      [
+        { name: 'Power Oats', items: ['Steel-cut oats', 'Protein powder', 'Banana', 'Almonds'], calories: 520 },
+        { name: 'Egg White Wrap', items: ['Egg white wrap', 'Spinach', 'Feta cheese', 'Salsa'], calories: 480 }
+      ]
+    ),
+    morningSnack: createMealWithAlternatives(
+      '9:30 AM',
+      'Focus Fuel',
+      ['Mixed nuts', 'Protein bar', 'Green tea'],
+      300,
+      [
+        { name: 'Apple & PB', items: ['Apple slices', 'Peanut butter', 'Cinnamon'], calories: 280 },
+        { name: 'Cheese Sticks', items: ['String cheese', 'Whole grain crackers'], calories: 260 }
+      ]
+    ),
+    lunch: createMealWithAlternatives(
+      '12:00 PM',
+      'Power Lunch',
+      ['Grilled chicken breast', 'Brown rice', 'Broccoli & spinach', 'Buttermilk'],
+      650,
+      [
+        { name: 'Burrito Bowl', items: ['Chicken burrito bowl', 'Black beans', 'Guacamole', 'Salsa'], calories: 680 },
+        { name: 'Salmon Salad', items: ['Grilled salmon', 'Mixed greens', 'Avocado', 'Olive oil dressing'], calories: 620 }
+      ]
+    ),
+    eveningSnack: createMealWithAlternatives(
+      '3:30 PM',
+      'Pre-workout Snack',
+      ['Banana', 'Peanut butter', 'Coffee'],
+      250,
+      [
+        { name: 'Rice Cakes', items: ['Rice cakes', 'Almond butter', 'Honey'], calories: 230 },
+        { name: 'Protein Shake', items: ['Whey protein', 'Almond milk', 'Ice'], calories: 200 }
+      ]
+    ),
+    dinner: createMealWithAlternatives(
+      '7:00 PM',
+      'Recovery Dinner',
+      ['Salmon/Lentils', 'Sweet potato', 'Mixed greens', 'Chamomile tea'],
+      550,
+      [
+        { name: 'Turkey Bowl', items: ['Ground turkey', 'Quinoa', 'Roasted vegetables'], calories: 520 },
+        { name: 'Shrimp Stir Fry', items: ['Shrimp', 'Mixed vegetables', 'Brown rice', 'Ginger sauce'], calories: 580 }
+      ]
+    )
+  },
+  'lose-weight': {
+    breakfast: createMealWithAlternatives(
+      '7:00 AM',
+      'Light Start',
+      ['Egg white omelette with veggies', 'Whole grain toast', 'Green tea', 'Grapefruit'],
+      350,
+      [
+        { name: 'Smoothie', items: ['Green smoothie', 'Spinach', 'Berries', 'Flax seeds'], calories: 280 },
+        { name: 'Overnight Oats', items: ['Low-fat overnight oats', 'Chia seeds', 'Berries'], calories: 320 }
+      ]
+    ),
+    morningSnack: createMealWithAlternatives(
+      '10:00 AM',
+      'Healthy Bite',
+      ['Cucumber sticks', 'Hummus', 'Green tea'],
+      150,
+      [
+        { name: 'Fruit Cup', items: ['Mixed berries', 'Mint leaves'], calories: 120 },
+        { name: 'Veggie Sticks', items: ['Carrot sticks', 'Celery', 'Light dip'], calories: 100 }
+      ]
+    ),
+    lunch: createMealWithAlternatives(
+      '12:30 PM',
+      'Lean Lunch',
+      ['Grilled chicken salad', 'Olive oil dressing', 'Lentil soup', 'Lemon water'],
+      450,
+      [
+        { name: 'Poke Bowl', items: ['Salmon poke bowl', 'Cucumber', 'Edamame', 'Light soy sauce'], calories: 420 },
+        { name: 'Veggie Wrap', items: ['Whole wheat wrap', 'Grilled vegetables', 'Feta cheese'], calories: 400 }
+      ]
+    ),
+    eveningSnack: createMealWithAlternatives(
+      '4:00 PM',
+      'Light Snack',
+      ['Apple slices', 'Cinnamon', 'Herbal tea'],
+      100,
+      [
+        { name: 'Popcorn', items: ['Air-popped popcorn (no butter)'], calories: 90 },
+        { name: 'Cottage Cheese', items: ['Low-fat cottage cheese', 'Cherry tomatoes'], calories: 110 }
+      ]
+    ),
+    dinner: createMealWithAlternatives(
+      '7:00 PM',
+      'Light Dinner',
+      ['Grilled fish', 'Steamed vegetables', 'Clear soup', 'Green tea'],
+      400,
+      [
+        { name: 'Zucchini Noodles', items: ['Zucchini pasta', 'Marinara sauce', 'Grilled chicken'], calories: 380 },
+        { name: 'Stuffed Peppers', items: ['Bell peppers', 'Lean ground turkey', 'Quinoa'], calories: 420 }
+      ]
+    )
   },
   'maintain': {
-    breakfast: {
-      time: '7:30 AM',
-      name: 'Balanced Breakfast',
-      items: ['Whole grain cereal with milk', '2 eggs any style', 'Fresh fruit', 'Coffee/tea'],
-      calories: 450
-    },
-    morningSnack: {
-      time: '10:30 AM',
-      name: 'Light Snack',
-      items: ['Yogurt', 'Apple', 'Few almonds'],
-      calories: 200
-    },
-    lunch: {
-      time: '1:00 PM',
-      name: 'Wholesome Lunch',
-      items: ['Dal with rice', 'Roti', 'Mixed vegetables', 'Raita', 'Salad'],
-      calories: 600
-    },
-    eveningSnack: {
-      time: '4:30 PM',
-      name: 'Evening Refresher',
-      items: ['Sprouts chaat', 'Green tea', 'Roasted chana'],
-      calories: 180
-    },
-    dinner: {
-      time: '8:00 PM',
-      name: 'Light Dinner',
-      items: ['Chapati', 'Vegetable curry', 'Curd', 'Fruit'],
-      calories: 450
-    }
+    breakfast: createMealWithAlternatives(
+      '7:30 AM',
+      'Balanced Breakfast',
+      ['Whole grain cereal with milk', '2 eggs any style', 'Fresh fruit', 'Coffee/tea'],
+      450,
+      [
+        { name: 'French Toast', items: ['Whole wheat French toast', 'Fresh berries', 'Maple syrup'], calories: 480 },
+        { name: 'Breakfast Burrito', items: ['Egg burrito', 'Black beans', 'Salsa', 'Cheese'], calories: 500 }
+      ]
+    ),
+    morningSnack: createMealWithAlternatives(
+      '10:30 AM',
+      'Light Snack',
+      ['Yogurt', 'Apple', 'Few almonds'],
+      200,
+      [
+        { name: 'Granola Bar', items: ['Oat granola bar', 'Green tea'], calories: 180 },
+        { name: 'Cheese & Fruit', items: ['Cheese cubes', 'Grapes'], calories: 220 }
+      ]
+    ),
+    lunch: createMealWithAlternatives(
+      '1:00 PM',
+      'Wholesome Lunch',
+      ['Dal with rice', 'Roti', 'Mixed vegetables', 'Raita', 'Salad'],
+      600,
+      [
+        { name: 'Sandwich Combo', items: ['Turkey sandwich', 'Side salad', 'Fruit cup'], calories: 580 },
+        { name: 'Pasta Primavera', items: ['Whole wheat pasta', 'Grilled vegetables', 'Olive oil'], calories: 620 }
+      ]
+    ),
+    eveningSnack: createMealWithAlternatives(
+      '4:30 PM',
+      'Evening Refresher',
+      ['Sprouts chaat', 'Green tea', 'Roasted chana'],
+      180,
+      [
+        { name: 'Smoothie', items: ['Mango smoothie', 'Chia seeds'], calories: 200 },
+        { name: 'Nuts & Dates', items: ['Mixed nuts', 'Medjool dates'], calories: 220 }
+      ]
+    ),
+    dinner: createMealWithAlternatives(
+      '8:00 PM',
+      'Balanced Dinner',
+      ['Chapati', 'Vegetable curry', 'Curd', 'Fruit'],
+      450,
+      [
+        { name: 'Grilled Plate', items: ['Grilled chicken', 'Roasted potatoes', 'Green beans'], calories: 480 },
+        { name: 'Fish Tacos', items: ['Fish tacos', 'Cabbage slaw', 'Lime crema'], calories: 500 }
+      ]
+    )
   },
   'lifestyle': {
-    breakfast: {
-      time: '7:00 AM',
-      name: 'Mindful Morning',
-      items: ['Overnight oats with chia seeds', 'Fresh berries', 'Herbal tea', 'Handful of walnuts'],
-      calories: 400
-    },
-    morningSnack: {
-      time: '10:00 AM',
-      name: 'Nourishing Snack',
-      items: ['Fresh fruit bowl', 'Coconut water'],
-      calories: 150
-    },
-    lunch: {
-      time: '12:30 PM',
-      name: 'Buddha Bowl',
-      items: ['Quinoa', 'Roasted vegetables', 'Hummus', 'Leafy greens', 'Tahini dressing'],
-      calories: 550
-    },
-    eveningSnack: {
-      time: '4:00 PM',
-      name: 'Zen Snack',
-      items: ['Dates with almond butter', 'Green smoothie'],
-      calories: 200
-    },
-    dinner: {
-      time: '7:00 PM',
-      name: 'Healing Dinner',
-      items: ['Miso soup', 'Steamed vegetables', 'Tofu/Fish', 'Brown rice', 'Golden milk before bed'],
-      calories: 450
-    }
+    breakfast: createMealWithAlternatives(
+      '7:00 AM',
+      'Mindful Morning',
+      ['Overnight oats with chia seeds', 'Fresh berries', 'Herbal tea', 'Handful of walnuts'],
+      400,
+      [
+        { name: 'Avocado Bowl', items: ['Avocado toast', 'Poached egg', 'Microgreens'], calories: 420 },
+        { name: 'Smoothie Bowl', items: ['Açaí bowl', 'Coconut flakes', 'Honey', 'Banana'], calories: 380 }
+      ]
+    ),
+    morningSnack: createMealWithAlternatives(
+      '10:00 AM',
+      'Nourishing Snack',
+      ['Fresh fruit bowl', 'Coconut water'],
+      150,
+      [
+        { name: 'Veggie Juice', items: ['Fresh vegetable juice', 'Ginger shot'], calories: 120 },
+        { name: 'Nut Mix', items: ['Raw almonds', 'Dried apricots'], calories: 180 }
+      ]
+    ),
+    lunch: createMealWithAlternatives(
+      '12:30 PM',
+      'Buddha Bowl',
+      ['Quinoa', 'Roasted vegetables', 'Hummus', 'Leafy greens', 'Tahini dressing'],
+      550,
+      [
+        { name: 'Mediterranean Bowl', items: ['Falafel', 'Tabbouleh', 'Tzatziki', 'Pita bread'], calories: 580 },
+        { name: 'Asian Bowl', items: ['Brown rice', 'Edamame', 'Tofu', 'Miso dressing'], calories: 520 }
+      ]
+    ),
+    eveningSnack: createMealWithAlternatives(
+      '4:00 PM',
+      'Zen Snack',
+      ['Dates with almond butter', 'Green smoothie'],
+      200,
+      [
+        { name: 'Hummus Plate', items: ['Hummus', 'Veggie sticks', 'Whole grain crackers'], calories: 220 },
+        { name: 'Fruit & Cheese', items: ['Apple slices', 'Brie cheese', 'Honey'], calories: 240 }
+      ]
+    ),
+    dinner: createMealWithAlternatives(
+      '7:00 PM',
+      'Healing Dinner',
+      ['Miso soup', 'Steamed vegetables', 'Tofu/Fish', 'Brown rice', 'Golden milk before bed'],
+      450,
+      [
+        { name: 'Veggie Stir Fry', items: ['Mixed vegetable stir fry', 'Cashews', 'Jasmine rice'], calories: 480 },
+        { name: 'Soup Night', items: ['Lentil soup', 'Crusty bread', 'Side salad'], calories: 420 }
+      ]
+    )
   }
 };
 
@@ -241,6 +410,19 @@ const WORKOUTS: Record<UserGoal, WorkoutPlan> = {
       { name: 'Jump squats', sets: 4, reps: 20 },
       { name: 'Push-ups', sets: 4, reps: 15 },
       { name: 'Plank', duration: 3 }
+    ]
+  },
+  'lose-weight': {
+    time: '6:30 AM',
+    name: 'Fat Burning Cardio',
+    duration: 50,
+    exercises: [
+      { name: 'Warm-up jog', duration: 5 },
+      { name: 'High knees', sets: 4, reps: 30 },
+      { name: 'Jumping jacks', sets: 4, reps: 40 },
+      { name: 'Burpees', sets: 3, reps: 12 },
+      { name: 'Mountain climbers', sets: 4, reps: 30 },
+      { name: 'Cool-down stretching', duration: 10 }
     ]
   },
   'maintain': {
@@ -284,28 +466,32 @@ export function generateRoutine(profile: UserProfile): DailyRoutine {
       time: goalConfig.wakeUpTime,
       title: 'Wake Up',
       description: 'Start your day fresh and energized',
-      icon: '🌅'
+      icon: '🌅',
+      required: true
     },
     {
       id: 'morning-drink',
       time: addMinutes(goalConfig.wakeUpTime, 10),
       title: 'Morning Drink',
       description: goalConfig.morningDrink,
-      icon: '🥤'
+      icon: '🥤',
+      required: true
     },
     {
       id: 'meditation',
       time: addMinutes(goalConfig.wakeUpTime, 20),
       title: 'Meditation',
       description: '10 minutes of mindfulness',
-      icon: '🧘'
+      icon: '🧘',
+      required: true
     },
     {
       id: 'morning-walk',
       time: addMinutes(goalConfig.wakeUpTime, 35),
       title: 'Morning Walk',
       description: '15-20 minute walk to boost circulation',
-      icon: '🚶'
+      icon: '🚶',
+      required: true
     }
   ];
 
@@ -315,28 +501,32 @@ export function generateRoutine(profile: UserProfile): DailyRoutine {
       time: '7:00 PM',
       title: 'Evening Walk',
       description: 'Light walk after dinner',
-      icon: '🌙'
+      icon: '🌙',
+      required: false
     },
     {
       id: 'screen-off',
       time: addMinutes(goalConfig.bedTime, -60),
       title: 'Screen Off',
       description: 'No screens before bed for better sleep',
-      icon: '📵'
+      icon: '📵',
+      required: true
     },
     {
       id: 'night-routine',
       time: addMinutes(goalConfig.bedTime, -30),
       title: 'Night Routine',
       description: 'Prepare for restful sleep',
-      icon: '🌜'
+      icon: '🌜',
+      required: true
     },
     {
       id: 'sleep',
       time: goalConfig.bedTime,
       title: 'Sleep',
       description: 'Get 7-8 hours of quality rest',
-      icon: '😴'
+      icon: '😴',
+      required: true
     }
   ];
 
